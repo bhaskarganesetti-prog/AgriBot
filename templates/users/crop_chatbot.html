@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>🌾 Agriculture Telugu Voice Chatbot</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#eef9f1;
+    margin:0;
+    padding:0;
+}
+
+.container{
+    width:600px;
+    margin:40px auto;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.2);
+    padding:20px;
+}
+
+h2{
+    text-align:center;
+    color:green;
+}
+
+.chatbox{
+    height:300px;
+    overflow-y:auto;
+    border:1px solid #ddd;
+    padding:10px;
+    margin-bottom:15px;
+}
+
+.user{
+    text-align:right;
+    margin:10px;
+    color:blue;
+}
+
+.bot{
+    text-align:left;
+    margin:10px;
+    color:green;
+}
+
+.input-area{
+    display:flex;
+}
+
+input{
+    flex:1;
+    padding:10px;
+    font-size:16px;
+}
+
+button{
+    padding:10px 15px;
+    margin-left:5px;
+    border:none;
+    background:green;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{
+    background:darkgreen;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🌱 వ్యవసాయ చాట్‌బాట్ (Agriculture Chatbot)</h2>
+
+<div id="chatbox" class="chatbox"></div>
+
+<div class="input-area">
+
+<input type="text" id="question" placeholder="మీ ప్రశ్న అడగండి...">
+
+<button onclick="sendMessage()">Send</button>
+
+<button onclick="startVoice()">🎤</button>
+
+</div>
+
+<audio id="audioPlayer" hidden></audio>
+
+</div>
+
+
+<script>
+
+function appendUser(text){
+    let chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<div class="user">👨‍🌾 ${text}</div>`;
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+function appendBot(text){
+    let chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<div class="bot">🤖 ${text}</div>`;
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+function sendMessage(){
+
+    let question = document.getElementById("question").value;
+
+    if(question=="") return;
+
+    appendUser(question);
+
+    fetch("/crop-chatbot-api/",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded",
+            "X-CSRFToken":getCookie("csrftoken")
+        },
+
+        body:"question="+encodeURIComponent(question)
+
+    })
+
+    .then(response=>response.json())
+
+    .then(data=>{
+
+        appendBot(data.text);
+
+        let audio=document.getElementById("audioPlayer");
+        audio.src=data.audio;
+        audio.play();
+
+    });
+
+    document.getElementById("question").value="";
+}
+
+
+
+function startVoice(){
+
+    const recognition = new webkitSpeechRecognition();
+
+    recognition.lang = "te-IN";
+
+    recognition.start();
+
+    recognition.onresult = function(event){
+
+        let voiceText = event.results[0][0].transcript;
+
+        document.getElementById("question").value = voiceText;
+
+        sendMessage();
+
+    }
+
+}
+
+
+function getCookie(name){
+
+    let cookieValue=null;
+
+    if(document.cookie && document.cookie!==""){
+
+        const cookies=document.cookie.split(";");
+
+        for(let i=0;i<cookies.length;i++){
+
+            const cookie=cookies[i].trim();
+
+            if(cookie.substring(0,name.length+1)===(name+"=")){
+
+                cookieValue=decodeURIComponent(cookie.substring(name.length+1));
+
+                break;
+
+            }
+
+        }
+
+    }
+
+    return cookieValue;
+
+}
+
+</script>
+
+</body>
+</html>

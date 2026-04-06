@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Bot | Agriculture Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* General Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: white;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: #1e1e2d;
+            padding: 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            z-index: 10;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            background: #29293f;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: #464670;
+        }
+
+        .sidebar a.active {
+            background: #3b82f6;
+        }
+
+        .sidebar a i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .profile {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3b82f6;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            padding: 30px;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        /* Voice Bot Interface */
+        .voice-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 100px;
+            margin-bottom: 40px;
+        }
+
+        .bar {
+            width: 6px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 10px;
+            animation: bounce 1s ease-in-out infinite;
+            display: none;
+        }
+
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        .bar:nth-child(5) { animation-delay: 0.4s; }
+        .bar:nth-child(6) { animation-delay: 0.5s; }
+
+        @keyframes bounce {
+            0%, 100% { height: 20px; }
+            50% { height: 80px; }
+        }
+
+        .bot-status {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #94a3b8;
+        }
+
+        .transcript-box {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-msg { color: #60a5fa; }
+        .user-msg { color: #facc15; text-align: right; }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Result Report Styling */
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            width: 100%;
+            display: none;
+            margin-top: 30px;
+            color: #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-left: 8px solid #3b82f6;
+        }
+
+        .report-header {
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .report-header h3 {
+            color: #1e3a8a;
+            font-size: 24px;
+        }
+
+        .report-date {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+
+        .report-table th, .report-table td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+
+        .report-table th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .prediction-result {
+            background: #ecfdf5;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px dashed #10b981;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .prediction-result h4 {
+            color: #065f46;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .prediction-result .crop-name {
+            color: #047857;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            margin-top: 20px;
+        }
+
+        @media print {
+            .sidebar, .header, .bot-status, .visualizer, .transcript-box, .controls, .btn-success {
+                display: none !important;
+            }
+            .main {
+                background: white !important;
+                padding: 0;
+                color: black !important;
+            }
+            .result-card {
+                display: block !important;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                width: 100%;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <img src="{{ user.profile_photo.url }}" alt="User Image">
+                <h3 style="margin-top: 10px;">{{ user.name }}</h3>
+            </div>
+            <a href="{% url 'userhome' name %}"><i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'dataset_view'%}"><i class="fas fa-database"></i> Dataset</a>
+            <a href="{% url 'chatfunction' %}" class="active"><i class="fa-solid fa-robot"></i> Start Voice Bot</a>
+            <a href="{% url 'crop_chatbot' %}"><i class="fa-solid fa-comments"></i> Crop Chatbot</a>
+            <a href="{% url 'predict_crop_view' %}"><i class="fa fa-leaf"></i> Crop Prediction</a>
+            <a href="{% url 'userlogin' %}"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div class="header">
+                <h1>🎙️ Live Agriculture Voice Bot</h1>
+                <div id="status-tag" style="color: #10b981; font-weight: bold;">● Online</div>
+            </div>
+
+            <div class="voice-container">
+                <div class="visualizer" id="visualizer">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+
+                <div class="bot-status" id="bot-status">Click Start to begin conversation</div>
+
+                <div class="transcript-box" id="transcript-box">
+                    <div class="message bot-msg">
+                        <strong>Bot:</strong> ప్రతిస్పందన సిద్ధంగా ఉంది. ప్రారంభించడానికి బటన్ నొక్కండి.
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-primary" id="start-btn" onclick="startFlow()">
+                        <i class="fas fa-play"></i> Start Bot
+                    </button>
+                    <button class="btn btn-danger" id="stop-btn" onclick="location.reload()" style="display: none;">
+                        <i class="fas fa-stop"></i> Reset
+                    </button>
+                </div>
+
+                <audio id="bot-audio" style="display: none;"></audio>
+
+                <div class="result-card" id="result-card">
+                    <div class="report-header">
+                        <div>
+                            <h3>📄 Crop Analysis Report</h3>
+                            <p>User: <strong>{{ user.name }}</strong></p>
+                        </div>
+                        <div class="report-date" id="report-date"></div>
+                    </div>
+                    
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Value Observed</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-body"></tbody>
+                    </table>
+                    
+                    <div class="prediction-result">
+                        <h4>Recommended Crop for your Soil</h4>
+                        <div class="crop-name" id="final-prediction"></div>
+                    </div>
+
+                    <button class="btn btn-success" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 10px; width: 100%; justify-content: center;">
+                        <i class="fas fa-redo"></i> New Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scrollBox = document.getElementById('transcript-box');
+        const botStatus = document.getElementById('bot-status');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const visualizer = document.getElementById('visualizer');
+        const bars = document.querySelectorAll('.bar');
+        const botAudio = document.getElementById('bot-audio');
+
+        let currentIndex = 0;
+        let userData = {
+            'N': null, 'P': null, 'K': null, 
+            'temperature': null, 'humidity': null, 
+            'ph': null, 'rainfall': null
+        };
+
+        const questions = [
+            { key: 'greet', text: 'హలో! ఇది వ్యవసాయ చాట్బాట్. మీరు ఎలా ఉన్నారు?', isWait: true },
+            { key: 'start', text: 'పొలానికి అనువైన పంటను తెలుసుకోవాలంటే "ప్రారంభించు" లేదా "స్టార్ట్" అని చెప్పండి.', isWait: true, checkStart: true },
+            { key: 'N', text: 'నైట్రోజన్ (N) విలువ చెప్పండి', isData: true },
+            { key: 'P', text: 'ఫాస్ఫరస్ (P) విలువ చెప్పండి', isData: true },
+            { key: 'K', text: 'పొటాషియం (K) విలువ చెప్పండి', isData: true },
+            { key: 'temperature', text: 'ఉష్ణోగ్రత (Temperature) చెప్పండి', isData: true },
+            { key: 'humidity', text: 'ఆర్ద్రత శాతం (Humidity) చెప్పండి', isData: true },
+            { key: 'ph', text: 'పిహెచ్ (pH) విలువ చెప్పండి', isData: true },
+            { key: 'rainfall', text: 'వర్షపాతం (Rainfall) మిల్లీమీటర్లలో చెప్పండి', isData: true }
+        ];
+
+        function addMessage(sender, text, type) {
+            const div = document.createElement('div');
+            div.className = `message ${type}-msg`;
+            div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            scrollBox.appendChild(div);
+            scrollBox.scrollTop = scrollBox.scrollHeight;
+        }
+
+        function toggleVisualizer(show) {
+            bars.forEach(bar => bar.style.display = show ? 'block' : 'none');
+        }
+
+        // Reliable Audio via gTTS API
+        async function speak(text, callback) {
+            botStatus.innerText = "Bot is speaking...";
+            toggleVisualizer(true);
+            
+            try {
+                const response = await fetch(`/tts-api/?text=${encodeURIComponent(text)}`);
+                const data = await response.json();
+                
+                if (data.audio_url) {
+                    botAudio.src = data.audio_url;
+                    botAudio.play();
+                    
+                    botAudio.onended = () => {
+                        toggleVisualizer(false);
+                        if(callback) callback();
+                    };
+                } else {
+                    console.error("TTS failed:", data.error);
+                    toggleVisualizer(false);
+                    if(callback) callback();
+                }
+            } catch (e) {
+                console.error("Speech API Network error", e);
+                toggleVisualizer(false);
+                if(callback) callback();
+            }
+        }
+
+        // Web Speech API - Recognition (Listening) with 10s Timeout
+        function listen(callback, onTimeout) {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'te-IN';
+            
+            let isProcessed = false;
+            
+            // Set 10-second timeout
+            const timer = setTimeout(() => {
+                if (!isProcessed) {
+                    isProcessed = true;
+                    recognition.stop();
+                    toggleVisualizer(false);
+                    if(onTimeout) onTimeout();
+                }
+            }, 10000);
+
+            toggleVisualizer(true);
+            botStatus.innerText = "Listening... (10s)";
+            
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                if (isProcessed) return;
+                isProcessed = true;
+                clearTimeout(timer);
+                
+                const text = event.results[0][0].transcript;
+                toggleVisualizer(false);
+                addMessage('You', text, 'user');
+                callback(text);
+            };
+
+            recognition.onerror = (event) => {
+                if (isProcessed) return;
+                isProcessed = true;
+                clearTimeout(timer);
+                
+                toggleVisualizer(false);
+                console.log("Recognition error:", event.error);
+                // If it's a 'no-speech' error from the API itself, we still treat it as a timeout/retry
+                if(onTimeout) onTimeout();
+            };
+        }
+
+        function extractNumber(text) {
+            // Simple English/Telugu number extraction
+            const match = text.match(/\d+(\.\d+)?/);
+            return match ? parseFloat(match[0]) : null;
+        }
+
+        async function processStep() {
+            if (currentIndex >= questions.length) {
+                finishFlow();
+                return;
+            }
+
+            const step = questions[currentIndex];
+            addMessage('Bot', step.text, 'bot');
+            
+            speak(step.text, () => {
+                // Listen with a repeat callback on timeout
+                listen(async (input) => {
+                    if (step.checkStart) {
+                        if (input.includes('ప్రారంభ') || input.includes('start') || input.includes('స్టార్ట్')) {
+                            currentIndex++;
+                            processStep();
+                        } else {
+                            speak("దయచేసి 'స్టార్ట్' అని చెప్పండి.", () => processStep());
+                        }
+                    } else if (step.isData) {
+                        let val = extractNumber(input);
+                        if (val !== null) {
+                            userData[step.key] = val;
+                            currentIndex++;
+                            processStep();
+                        } else {
+                            speak("సరైన సంఖ్య చెప్పండి", () => processStep());
+                        }
+                    } else if(step.key === 'greet') {
+                        speak("వినడానికి చాలా ఆనందంగా ఉంది!", () => {
+                            currentIndex++;
+                            processStep();
+                        });
+                    } else {
+                        currentIndex++;
+                        processStep();
+                    }
+                }, () => {
+                    // On Timeout: Repeat the current question
+                    botStatus.innerText = "Timeout... Repeating question";
+                    processStep();
+                });
+            });
+        }
+
+        function startFlow() {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'flex';
+            processStep();
+        }
+
+        async function finishFlow() {
+            botStatus.innerText = "Processing Prediction...";
+            addMessage('Bot', "ధన్యవాదాలు! మీ డేటాను విశ్లేషిస్తున్నాను.", 'bot');
+            speak("ధన్యవాదాలు! మీ డేటాను విశ్లేషిస్తున్నాను.");
+
+            // Send to Django API
+            const formData = new FormData();
+            for (const key in userData) {
+                formData.append(key, userData[key]);
+            }
+
+            try {
+                const response = await fetch('/voice-predict-api/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                const data = await response.json();
+
+                if (data.prediction) {
+                    showResult(data);
+                } else {
+                    addMessage('Bot', "Error: " + data.error, 'bot');
+                }
+            } catch (e) {
+                addMessage('Bot', "క్షమించండి! సర్వర్ కనెక్షన్ లో సమస్య ఉంది.", 'bot');
+            }
+        }
+
+        function showResult(data) {
+            const resultCard = document.getElementById('result-card');
+            const resultBody = document.getElementById('result-body');
+            const finalPrediction = document.getElementById('final-prediction');
+            const reportDate = document.getElementById('report-date');
+
+            reportDate.innerText = "Date: " + new Date().toLocaleString();
+            
+            resultBody.innerHTML = '';
+            for (const [key, val] of Object.entries(userData)) {
+                resultBody.innerHTML += `
+                    <tr>
+                        <td><strong>${key.toUpperCase()}</strong></td>
+                        <td>${val}</td>
+                        <td style="color: green">✓ Measured</td>
+                    </tr>`;
+            }
+
+            finalPrediction.innerText = data.prediction;
+            resultCard.style.display = 'block';
+            botStatus.innerText = "Prediction Complete";
+            
+            speak("మీకు సిఫారసు చేసిన పంట: " + data.prediction);
+            addMessage('Bot', "రిపోర్ట్ సిద్ధంగా ఉంది. మీకు సిఫారసు చేసిన పంట: " + data.prediction, 'bot');
+
+            // Scroll to report
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

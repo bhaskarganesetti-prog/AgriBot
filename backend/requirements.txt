@@ -1,0 +1,10 @@
+fastapi==0.115.11
+uvicorn==0.34.0
+sqlalchemy==2.0.38
+pydantic==2.10.6
+pydantic-settings==2.8.1
+python-multipart==0.0.20
+pandas==2.2.3
+scikit-learn==1.6.1
+gtts==2.5.4
+requests==2.32.3
