@@ -23,7 +23,7 @@ def register_user(data: UserRegistration, db: Session = Depends(get_db)):
         password=data.password,
         confirm_password=data.confirm_password,
         mobile=data.mobile,
-        status="waiting"
+        status="activated"
     )
 
     db.add(new_user)
