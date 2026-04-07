@@ -45,51 +45,11 @@ def userregister(request):
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES)
         if form.is_valid():
-            print("Form is valid. Proceeding with OTP generation.")  # Debug message
-            # Generate a 6-digit OTP
-            otp = random.randint(100000, 999999)
-            email = form.cleaned_data['email']
-            name = form.cleaned_data['name']
-            otp_expiry_minutes = 5  # OTP expiry time in minutes
-            # Handle file upload
-            profile_photo = request.FILES.get('profile_photo')
-            if profile_photo:
-                # Save the file to a temporary location
-                temp_file_path = os.path.join(settings.MEDIA_ROOT, 'temp', profile_photo.name)
-                with open(temp_file_path, 'wb+') as destination:
-                    for chunk in profile_photo.chunks():
-                        destination.write(chunk)
-                # Store the file path in the session
-                request.session['profile_photo_path'] = temp_file_path
-            # Store OTP and form data in session
-            request.session['registration_data'] = request.POST
-            request.session['otp'] = otp
-            request.session['otp_expiry'] = (datetime.datetime.now() + datetime.timedelta(minutes=otp_expiry_minutes)).strftime("%Y-%m-%d %H:%M:%S")
-            request.session['email'] = email  
-            print(f"Generated OTP: {otp} for email: {email}")  # Debug message
-            # Email content
-            subject = "OTP Verification - Secure Your Registration"
-            message = format_html(f"""
-                <p>Dear <b>{name}</b>,</p>
-                <p>Thank you for registering. To complete your registration, please use the following One-Time Password (OTP):</p>
-                <h2 style="color: red; text-align: center;">{otp}</h2>
-                <p>This OTP is valid for <b>{otp_expiry_minutes} minutes</b>. Do not share this OTP with anyone for security reasons.</p>
-                <p>If you did not request this, please ignore this email.</p>
-                <br>
-                <p>Best Regards,</p>
-                <p><b>System Generated Mail - No Reply Allowed</b></p>
-            """)
-            # Send OTP via Email
-            send_mail(
-    'Registration Successful',
-    'Thank you for registering.',
-    settings.EMAIL_HOST_USER,
-    [email],
-    fail_silently=False,
-)
-            messages.success(request, "OTP has been sent to your email. Please verify.")
-            print("Redirecting to OTP verification page.")  # Debug message
-            return redirect(reverse('verify_otp'))  # Redirect to OTP verification page
+            user = form.save(commit=False)
+            user.status = 'activated'  # Automatic activation for easier testing on Render
+            user.save()
+            messages.success(request, "Account created successfully! You can now log in.")
+            return redirect('userlogin')
         else:
             messages.error(request, "OOPS! Please correct the errors below.")
             print("Form validation failed.")  # Debug message
